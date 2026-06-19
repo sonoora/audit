@@ -1,0 +1,13 @@
+{
+  "name": "@sonoora/audit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SONOORA operational audit shell.",
+  "scripts": {
+    "check": "node --check api/health.js && node --check api/ready.js && node --check api/events.js",
+    "build": "node scripts/validate.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SONOORA Audit</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #050505;
+        color: #f4f4f5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #050505;
+      }
+
+      main {
+        width: min(1080px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 32px 0;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 650;
+        letter-spacing: 0;
+      }
+
+      section {
+        border: 1px solid #27272a;
+        border-radius: 8px;
+        padding: 18px;
+        background: #0b0b0c;
+      }
+
+      .status {
+        border: 1px solid #27272a;
+        color: #a1a1aa;
+        padding: 7px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #d4d4d8;
+        font-size: 13px;
+      }
+
+      textarea,
+      button {
+        width: 100%;
+        border: 1px solid #3f3f46;
+        border-radius: 6px;
+        background: #09090b;
+        color: #f4f4f5;
+        font: inherit;
+      }
+
+      button {
+        height: 40px;
+        margin-bottom: 14px;
+        cursor: pointer;
+        background: #fafafa;
+        color: #09090b;
+        border-color: #fafafa;
+        font-weight: 650;
+      }
+
+      textarea {
+        min-height: 320px;
+        padding: 12px;
+        resize: vertical;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      pre {
+        min-height: 320px;
+        margin: 0;
+        overflow: auto;
+        white-space: pre-wrap;
+        border: 1px solid #27272a;
+        border-radius: 6px;
+        background: #050505;
+        color: #d4d4d8;
+        padding: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .note {
+        margin-top: 12px;
+        color: #a1a1aa;
+        font-size: 13px;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>SONOORA Audit</h1>
+        <div class="status" id="status">checking</div>
+      </header>
+
+      <section>
+        <button id="send">Preview audit event</button>
+        <div class="grid">
+          <div>
+            <label for="payload">Audit JSON</label>
+            <textarea id="payload">{
+  "spay_id": "example",
+  "action": "scout.audit.preview",
+  "actor_type": "system",
+  "status": "preview"
+}</textarea>
+          </div>
+          <div>
+            <label for="result">Normalized preview</label>
+            <pre id="result">{}</pre>
+          </div>
+        </div>
+        <p class="note">
+          This shell does not persist compliance evidence yet. It only validates shape and routing.
+        </p>
+      </section>
+    </main>
+
+    <script>
+      async function refreshHealth() {
+        const status = document.getElementById("status");
+        try {
+          const response = await fetch("/health", { cache: "no-store" });
+          status.textContent = response.ok ? "healthy" : "unhealthy";
+        } catch {
+          status.textContent = "offline";
+        }
+      }
+
+      async function sendPayload() {
+        const payloadText = document.getElementById("payload").value;
+        const result = document.getElementById("result");
+
+        let payload;
+        try {
+          payload = JSON.parse(payloadText);
+        } catch (error) {
+          result.textContent = JSON.stringify({ ok: false, error: "INVALID_JSON", message: error.message }, null, 2);
+          return;
+        }
+
+        const response = await fetch("/events", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+      }
+
+      document.getElementById("send").addEventListener("click", sendPayload);
+      refreshHealth();
+    </script>
+  </body>
+</html>
