@@ -1,7 +1,7 @@
 import { access } from "node:fs/promises";
 
 const required = [
-  "index.html",
+  "public/index.html",
   "api/health.js",
   "api/ready.js",
   "api/events.js",
